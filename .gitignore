@@ -1,0 +1,7 @@
+pokemon-showdown/
+__pycache__/
+.vscode/
+wandb/
+results/
+.DS_Store
+poke-env/
