@@ -40,7 +40,6 @@ class DQNAgent:
             eval_opponents,
             team,
             LOG_EVERY = 10,
-            # EVAL_EVERY = 100,
             EVAL_NUM_GAMES = 25,
             FINAL_EVAL_GAMES = 100,
             EVAL_EPSILON = 0.05 # why not 0?
@@ -91,9 +90,6 @@ class DQNAgent:
             self.steps_done += 1
             if sample > eps_threshold:
                 with torch.no_grad():
-                    # t.max(1) will return the largest column value of each row.
-                    # second column on max result is index of where max element was
-                    # found, so we pick action with the larger expected reward.
                     return self.policy_net(state).max(1).indices.view(1, 1)
             else:
                 return torch.tensor([[env.action_space.sample()]], device=self.device, dtype=torch.long)
@@ -121,7 +117,7 @@ class DQNAgent:
 
         expected_state_action_values = (next_state_values * self.GAMMA) + reward_batch
 
-        criterion = nn.HuberLoss() # smooth l1? mse? 
+        criterion = nn.HuberLoss() # smooth l1?
         loss = criterion(state_action_values, expected_state_action_values.unsqueeze(1))
 
         if it % self.LOG_EVERY == 0:
@@ -131,6 +127,12 @@ class DQNAgent:
         loss.backward()
         torch.nn.utils.clip_grad_value_(self.policy_net.parameters(), 100)
         self.optimizer.step()
+
+    def train_async(self):
+        """
+        Standard training method adapted to use N workers to fill replay buffers, then update network parameters
+        """
+        pass
 
     def train(self):
         self.create_holdout_set()
@@ -255,8 +257,6 @@ class DQNAgent:
 
             # determine winner and score
         
-        print(f"{100 * (env.n_won_battles / num_games)}% winrate against {name}")
-        
         metrics["winrate"] = env.n_won_battles / num_games
         metrics["avg_total_reward"] = sum(episode_rewards) / num_games
         metrics["avg_episode_length"] = sum(episode_durations) / num_games
@@ -275,7 +275,7 @@ class DQNAgent:
             max_qs.append(self.get_max_q(state))
 
         avg_max_qs = sum(max_qs) / len(max_qs)
-        print(f"Average max Q value on holdout set: {avg_max_qs}")
+        # print(f"Average max Q value on holdout set: {avg_max_qs}")
         return avg_max_qs
     
     def _get_env(self, opponent=None): # TODO: modulate opponent throughout training

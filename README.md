@@ -13,4 +13,22 @@
 - simple dqn set up, no layernorm no dropout, FF 128 neurons
 - simple fwg randbats env to test convergence of learning
 - simple state embedding (see `rl_players.py`)
-  
+
+## agenda
+
+- work on server
+- set up harder envs (6v6, randbats)
+- upgrade NN
+- upgrade state representation
+- towards rainbow
+- distributed training
+- actually turn on incomplete info
+
+## long term todo
+
+- formal method for multi agent
+- formal method for incomplete info
+- CFR
+- better exploration policy
+- MCTS or other search (patricks method)
+- recurrent network style for histories > state?
