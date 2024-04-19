@@ -27,6 +27,34 @@ class FF_DQN(nn.Module):
         x = F.relu(self.layer2(x))
         return self.layer3(x)
     
+class FF_DQN_2(nn.Module):
+    def __init__(self, n_observations, n_actions, device, dropout_rate=0.5):
+        super(FF_DQN_2, self).__init__()
+
+        self.layer1 = nn.Linear(n_observations, 128)
+        self.layer2 = nn.Linear(128, 128)
+        self.layer3 = nn.Linear(128, n_actions)
+
+        # Layer normalization layers
+        self.norm1 = nn.LayerNorm(128)
+        self.norm2 = nn.LayerNorm(128)
+
+        # Dropout layer
+        self.dropout = nn.Dropout(dropout_rate)
+
+        # Move model to the specified device
+        self.to(device)
+
+    def forward(self, x):
+        x = self.layer1(x)
+        x = F.relu(self.norm1(x))
+        x = self.dropout(x)
+        x = self.layer2(x)
+        x = F.relu(self.norm2(x))
+        x = self.dropout(x)
+        x = self.layer3(x)
+        return x
+    
 class DQNAgent:
     def __init__(
             self,
@@ -39,10 +67,10 @@ class DQNAgent:
             model_path,
             eval_opponents,
             team,
-            LOG_EVERY = 10,
+            LOG_EVERY = 100,
             EVAL_NUM_GAMES = 25,
             FINAL_EVAL_GAMES = 100,
-            EVAL_EPSILON = 0.05 # why not 0?
+            EVAL_EPSILON = 0.01 # why not 0?
             ):
         self.device = torch.device("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
         self.EPS_START = config.EPS_START
@@ -80,7 +108,7 @@ class DQNAgent:
             with torch.no_grad():
                 sample = random.random()
                 if sample > self.EVAL_EPSILON:
-                    return self.network(state).max(1).indices.view(1, 1)
+                    return self.policy_net(state).max(1).indices.view(1, 1)
                 else:
                     return torch.tensor([[env.action_space.sample()]], device=self.device, dtype=torch.long)
         else:
@@ -174,10 +202,13 @@ class DQNAgent:
                     if READY_FOR_EVAL:
                         env.close()
                         self.eval()
-                        env = self._get_env()
+                        env = self._get_env(it=episode)
                         READY_FOR_EVAL = False
                     state, _ = env.reset()
                     state = torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
+
+        env.close()
+        self.eval()
         
         print('Done training...')
 
@@ -201,6 +232,7 @@ class DQNAgent:
 
         Collect and log relevant metrics, being winrate, average total reward, 
         """
+        self.policy_net.eval()
         results = {}
 
         num_games_to_eval = self.EVAL_NUM_GAMES if not is_final else self.FINAL_EVAL_GAMES
@@ -214,7 +246,18 @@ class DQNAgent:
         # log to wandb
         results = {f"{opponent}_{metric}": value for opponent, metrics in results.items() for metric, value in metrics.items()}
         results["avg_max_q_holdout"] = self.calculate_holdout_avg_max_qs()
+        
         wandb.log(results)
+
+        if is_final:
+            # iterate over results and print
+            for opponent, metrics in results.items():
+                print(f"Opponent: {opponent}")
+                for metric, value in metrics.items():
+                    print(f"{metric}: {value}")
+                print()
+
+        self.policy_net.train()
         return results
     
     def play_games(self, env, num_games, name="default"):
@@ -234,7 +277,7 @@ class DQNAgent:
             state, _ = env.reset()
             state = torch.tensor(state, dtype=torch.float32, device=self.device).unsqueeze(0)
             for t in count():
-                action = self.select_action(state, env)
+                action = self.select_action(state, env, is_eval=True)
                 max_qs.append(self.get_max_q(state))
                 observation, reward, terminated, truncated, _ = env.step(action.item())
                 total_reward += reward
@@ -278,9 +321,9 @@ class DQNAgent:
         # print(f"Average max Q value on holdout set: {avg_max_qs}")
         return avg_max_qs
     
-    def _get_env(self, opponent=None): # TODO: modulate opponent throughout training
+    def _get_env(self, opponent=None, it=0): # TODO: modulate opponent throughout training
         if opponent is None:
-            opponent = self.eval_opponents[0]
+            opponent = self.eval_opponents[2] #self.eval_opponents[0] if it < self.num_episodes / 3 else self.eval_opponents[2]
         return self.player(battle_format="gen7ou",team=self.team, opponent=opponent, start_challenging=True)
     
     def create_holdout_set(self):

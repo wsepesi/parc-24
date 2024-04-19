@@ -6,6 +6,7 @@
 
 ## training
 
+- `node pokemon-showdown start --no-security`
 - `python train.py`
 
 ## notes
@@ -16,12 +17,14 @@
 
 ## agenda
 
-- work on server
-- set up harder envs (6v6, randbats)
+- work on server (TODO:)
+- set up harder envs (6v6, randbats) (FIXME: set up as flag or something)
+- training scheduling
 - upgrade NN
 - upgrade state representation
 - towards rainbow
 - distributed training
+- self play
 - actually turn on incomplete info
 
 ## long term todo
