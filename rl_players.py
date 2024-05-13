@@ -6,7 +6,7 @@ import os
 from gymnasium.spaces import Box, Space
 
 from poke_env.environment.abstract_battle import AbstractBattle
-from poke_env.player import Gen7EnvSinglePlayer
+from poke_env.player import Gen7EnvSinglePlayer, Gen4EnvSinglePlayer
 from poke_env.data import GenData
 
 
@@ -59,3 +59,11 @@ class SimpleRLPlayer(Gen7EnvSinglePlayer):
         )
 
 
+class MediumRLPlayer(Gen7EnvSinglePlayer):
+    pass
+class BigBoyRLPlayer(Gen7EnvSinglePlayer):
+    pass
+class JettRLPlayer(Gen4EnvSinglePlayer):
+    pass
+class JettAppxRLPlayer(Gen7EnvSinglePlayer):
+    pass

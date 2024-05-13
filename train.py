@@ -29,7 +29,7 @@ async def main():
         GAMMA=0.99,
         EPS_START=0.95,
         EPS_END=0.05,
-        EPS_DECAY=NUM_EPS_BASE / 5,
+        EPS_DECAY=NUM_EPS_BASE / 10,
         TAU=0.005,
         LR=1e-4,
         NUM_EPISODES=NUM_EPS_BASE,

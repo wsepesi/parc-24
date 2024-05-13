@@ -33,11 +33,15 @@ class FF_DQN_2(nn.Module):
 
         self.layer1 = nn.Linear(n_observations, 128)
         self.layer2 = nn.Linear(128, 128)
-        self.layer3 = nn.Linear(128, n_actions)
+        self.layer3 = nn.Linear(128, 64)
+        self.layer4 = nn.Linear(64, 32)
+        self.layer5 = nn.Linear(32, n_actions)
 
         # Layer normalization layers
         self.norm1 = nn.LayerNorm(128)
         self.norm2 = nn.LayerNorm(128)
+        self.norm3 = nn.LayerNorm(64)
+        self.norm4 = nn.LayerNorm(32)
 
         # Dropout layer
         self.dropout = nn.Dropout(dropout_rate)
@@ -53,6 +57,12 @@ class FF_DQN_2(nn.Module):
         x = F.relu(self.norm2(x))
         x = self.dropout(x)
         x = self.layer3(x)
+        x = F.relu(self.norm3(x))
+        x = self.dropout(x)
+        x = self.layer4(x)
+        x = F.relu(self.norm4(x))
+        x = self.dropout(x)
+        x = self.layer5(x)
         return x
     
 class DQNAgent:

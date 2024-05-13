@@ -15,18 +15,6 @@
 - simple fwg randbats env to test convergence of learning
 - simple state embedding (see `rl_players.py`)
 
-## agenda
-
-- work on server (TODO:)
-- set up harder envs (6v6, randbats) (FIXME: set up as flag or something)
-- training scheduling
-- upgrade NN
-- upgrade state representation
-- towards rainbow
-- distributed training
-- self play
-- actually turn on incomplete info
-
 ## long term todo
 
 - formal method for multi agent
